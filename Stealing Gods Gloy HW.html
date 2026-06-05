@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>30 Days to Brokenness</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;600&family=EB+Garamond:ital@1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ash: #1a1714;
+    --ember: #8B3A2A;
+    --gold: #C9A84C;
+    --parchment: #F5EDD9;
+    --smoke: #4a4540;
+    --light-smoke: #8a8078;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--ash);
+    color: var(--parchment);
+    font-family: 'Cormorant Garamond', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.4;
+  }
+
+  header {
+    text-align: center;
+    padding: 60px 20px 40px;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+    position: relative;
+  }
+
+  header::after {
+    content: '✦';
+    display: block;
+    color: var(--gold);
+    font-size: 12px;
+    margin-top: 20px;
+    opacity: 0.6;
+  }
+
+  .title-small {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 6px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(28px, 6vw, 52px);
+    font-weight: 400;
+    line-height: 1.1;
+    color: var(--parchment);
+    margin-bottom: 8px;
+  }
+
+  h1 em {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    color: var(--gold);
+    display: block;
+    font-size: 0.65em;
+    letter-spacing: 2px;
+    margin-top: 6px;
+  }
+
+  .subtitle {
+    font-size: 15px;
+    color: var(--light-smoke);
+    font-style: italic;
+    margin-top: 16px;
+    font-weight: 300;
+  }
+
+  /* Week navigation */
+  .week-nav {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 30px 20px 0;
+    flex-wrap: wrap;
+  }
+
+  .week-btn {
+    background: none;
+    border: 1px solid rgba(201,168,76,0.25);
+    color: var(--light-smoke);
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .week-btn:hover, .week-btn.active {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(201,168,76,0.05);
+  }
+
+  /* Week section */
+  .week-section {
+    display: none;
+    padding: 40px 20px 60px;
+    max-width: 720px;
+    margin: 0 auto;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .week-section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .week-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(201,168,76,0.15);
+  }
+
+  .week-number {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: var(--gold);
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 8px;
+  }
+
+  .week-theme {
+    font-size: clamp(22px, 5vw, 34px);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--parchment);
+    line-height: 1.2;
+  }
+
+  .week-desc {
+    font-size: 14px;
+    color: var(--light-smoke);
+    margin-top: 10px;
+    line-height: 1.6;
+  }
+
+  /* Day card */
+  .day-card {
+    margin-bottom: 24px;
+    border: 1px solid rgba(201,168,76,0.12);
+    border-left: 2px solid var(--ember);
+    background: rgba(255,255,255,0.02);
+    transition: all 0.3s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .day-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--gold);
+    transform: scaleY(0);
+    transition: transform 0.3s;
+    transform-origin: bottom;
+  }
+
+  .day-card:hover::before,
+  .day-card.open::before {
+    transform: scaleY(1);
+  }
+
+  .day-card:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(201,168,76,0.3);
+  }
+
+  .day-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+  }
+
+  .day-num {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--ember);
+    min-width: 50px;
+    opacity: 0.9;
+  }
+
+  .day-ref {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    color: var(--gold);
+    font-weight: 600;
+    flex: 1;
+  }
+
+  .day-focus {
+    font-size: 13px;
+    color: var(--light-smoke);
+    font-style: italic;
+    text-align: right;
+    font-weight: 300;
+  }
+
+  .day-body {
+    display: none;
+    padding: 0 20px 20px 86px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .day-card.open .day-body { display: block; }
+
+  .day-verse {
+    font-size: 16px;
+    line-height: 1.8;
+    color: rgba(245,237,217,0.85);
+    font-style: italic;
+    font-weight: 300;
+    margin-bottom: 14px;
+    padding: 14px 16px;
+    background: rgba(201,168,76,0.04);
+    border-left: 1px solid rgba(201,168,76,0.2);
+  }
+
+  .day-meditation {
+    font-size: 13.5px;
+    line-height: 1.75;
+    color: var(--light-smoke);
+  }
+
+  .day-meditation strong {
+    color: var(--parchment);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'Cinzel', serif;
+  }
+
+  .day-prayer {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(201,168,76,0.1);
+    font-size: 13px;
+    color: var(--smoke);
+    font-style: italic;
+    line-height: 1.7;
+  }
+
+  .day-prayer span {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--ember);
+    text-transform: uppercase;
+    font-style: normal;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  footer {
+    text-align: center;
+    padding: 40px 20px;
+    border-top: 1px solid rgba(201,168,76,0.1);
+    font-size: 12px;
+    color: var(--smoke);
+    font-style: italic;
+    letter-spacing: 1px;
+  }
+
+  /* Divider */
+  .ornament {
+    text-align: center;
+    color: var(--gold);
+    opacity: 0.3;
+    font-size: 12px;
+    letter-spacing: 8px;
+    margin: 30px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="title-small">A 30-Day Journey</p>
+  <h1>Brokenness & Transformation
+    <em>in Marriage Leadership</em>
+  </h1>
+  <p class="subtitle">Daily Scripture for the man who steals God's glory through control</p>
+</header>
+
+<div class="week-nav">
+  <button class="week-btn active" onclick="showWeek(1)">Week 1</button>
+  <button class="week-btn" onclick="showWeek(2)">Week 2</button>
+  <button class="week-btn" onclick="showWeek(3)">Week 3</button>
+  <button class="week-btn" onclick="showWeek(4)">Week 4</button>
+  <button class="week-btn" onclick="showWeek(5)">Days 29–30</button>
+</div>
+
+<!-- WEEK 1 -->
+<div class="week-section active" id="week-1">
+  <div class="week-header">
+    <div class="week-number">Week One</div>
+    <div class="week-theme">Seeing the Sin Clearly</div>
+    <div class="week-desc">You cannot be broken over what you have not named. This week is about letting God show you the full weight of what control and pride actually are.</div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 1</span>
+      <span class="day-ref">Isaiah 42:8</span>
+      <span class="day-focus">Stolen Glory</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"I am the Lord; that is my name; my glory I give to no other, nor my praise to carved idols."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>When you lead through fear and control, you sit on a throne that belongs only to God. The idol here is not carved from wood — it is carved from your ego. Ask: In what specific moments this week did I take His throne in my home?</div>
+      <div class="day-prayer"><span>Pray</span>Lord, show me every moment I have taken what is Yours. I do not want Your glory. Break me of wanting it.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 2</span>
+      <span class="day-ref">Genesis 3:16</span>
+      <span class="day-focus">The Curse You're Living In</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Your desire will be for your husband, and he will rule over you."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>This is not a command — it is a curse. Domineering rule over your wife is the mark of the fall, not the Kingdom. Every time you dictate, you announce that you are living beneath redemption. Christ came to reverse this.</div>
+      <div class="day-prayer"><span>Pray</span>God, I have been living in the curse while claiming the crown. Forgive me. Pull me out of Adam and into Christ.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 3</span>
+      <span class="day-ref">Proverbs 16:18</span>
+      <span class="day-focus">The Pride Root</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Pride goes before destruction, and a haughty spirit before a fall."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>Dictatorship in marriage is pride with a spiritual label on it. "I'm the head" becomes a weapon instead of a cross. Where in your leadership is pride hiding underneath the language of authority?</div>
+      <div class="day-prayer"><span>Pray</span>Father, show me my haughty spirit. I do not want to fall — I want to kneel. Destroy the pride before it destroys my marriage.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 4</span>
+      <span class="day-ref">Mark 10:42–45</span>
+      <span class="day-focus">Kingdom vs. World</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"You know that those who are considered rulers of the Gentiles lord it over them... But it shall not be so among you. Whoever would be great among you must be your servant."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>Jesus drew a line: the world's authority looks one way, the Kingdom's looks completely opposite. Which side of that line does your marriage leadership fall on today? Be honest.</div>
+      <div class="day-prayer"><span>Pray</span>Jesus, I have led like the Gentiles, not like You. Redefine greatness for me until I want the towel more than the throne.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 5</span>
+      <span class="day-ref">1 Corinthians 11:3</span>
+      <span class="day-focus">The Broken Chain</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"The head of every man is Christ, the head of a wife is her husband, and the head of Christ is God."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>A dictator is a man who demands submission from his wife while refusing it to Christ. You cannot hold authority you are not under. Where are you functionally autonomous from Christ while demanding your wife submit?</div>
+      <div class="day-prayer"><span>Pray</span>Lord, I have broken the chain by refusing to be under You. I re-submit my headship to You today. Lead me so I can lead.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 6</span>
+      <span class="day-ref">Proverbs 29:25</span>
+      <span class="day-focus">Fear Underneath Control</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"The fear of man lays a snare, but whoever trusts in the Lord is safe."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>Control is fear that has put on the clothes of strength. You control because you are afraid — of losing respect, of being irrelevant, of your wife not needing you. Name the specific fear underneath your controlling behavior.</div>
+      <div class="day-prayer"><span>Pray</span>God, I am afraid. Show me what I am afraid of. Replace my fear of man with trust in You.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 7</span>
+      <span class="day-ref">Psalm 51:1–4, 10</span>
+      <span class="day-focus">True Repentance</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Have mercy on me, O God... Against you, you only, have I sinned... Create in me a clean heart, O God, and renew a right spirit within me."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>David did not minimize. He did not explain. He did not justify. He collapsed before God. This is the posture for the end of Week 1. Don't move to Week 2 until you have sat in this psalm for a full day.</div>
+      <div class="day-prayer"><span>Pray</span>Pray Psalm 51 aloud, slowly, substituting your specific sins in marriage for David's. Do not rush this.</div>
+    </div>
+  </div>
+</div>
+
+<!-- WEEK 2 -->
+<div class="week-section" id="week-2">
+  <div class="week-header">
+    <div class="week-number">Week Two</div>
+    <div class="week-theme">The Cross-Shaped Husband</div>
+    <div class="week-desc">Brokenness without a new vision produces despair, not transformation. This week you look at Jesus — the only model of authority that does not steal glory.</div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 8</span>
+      <span class="day-ref">Ephesians 5:25–27</span>
+      <span class="day-focus">The Giving Model</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Husbands, love your wives, as Christ loved the church and gave himself up for her, that he might sanctify her..."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>The purpose of headship is your wife's sanctification, not your satisfaction. Christ's love was directional — it moved toward her need, not His comfort. What is your wife's deepest spiritual need right now, and are you moving toward it?</div>
+      <div class="day-prayer"><span>Pray</span>Father, shift my leadership from taking to giving. Show me specifically what my wife needs from me this week.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 9</span>
+      <span class="day-ref">Philippians 2:3–8</span>
+      <span class="day-focus">The Downward Move</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Do nothing from selfish ambition or conceit, but in humility count others more significant than yourselves... [Christ] emptied himself, taking the form of a servant."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>Christ moved down. He had every right to rule — and He knelt. Kenosis (self-emptying) is the shape of true headship. What would it look like for you to empty yourself in your marriage today in one concrete act?</div>
+      <div class="day-prayer"><span>Pray</span>Jesus, You descended. Teach me to descend. Kill my need to be seen as the authority.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 10</span>
+      <span class="day-ref">John 13:4–5, 12–15</span>
+      <span class="day-focus">The Towel</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"[Jesus] rose from supper... and began to wash the disciples' feet... 'If I then, your Lord and Teacher, have washed your feet, you also ought to wash one another's feet.'"</div>
+      <div class="day-meditation"><strong>Meditate On</strong>Jesus was certain of His authority (v.3) — and that security is exactly what freed Him to serve. Insecure men dominate. Secure men kneel. Your dictatorship reveals insecurity, not strength. Let His security become yours.</div>
+      <div class="day-prayer"><span>Pray</span>Lord, I want to be so secure in You that I can pick up the towel without feeling diminished. Give me that security.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 11</span>
+      <span class="day-ref">1 Peter 3:7</span>
+      <span class="day-focus">Understanding Her</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Likewise, husbands, live with your wives in an understanding way, showing honor to the woman as the weaker vessel, since they are heirs with you of the grace of life, so that your prayers may not be hindered."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>God ties your prayer life directly to how you treat your wife. A dictator does not seek to understand — he seeks to be understood. "Understanding way" means study her. Know her. Do you truly know your wife's fears, wounds, and hopes?</div>
+      <div class="day-prayer"><span>Pray</span>God, show me how little I have sought to understand my wife. Give me curiosity for her. And forgive me for the prayers I have forfeited through dishonor.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 12</span>
+      <span class="day-ref">Colossians 3:19</span>
+      <span class="day-focus">The Prohibition</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Husbands, love your wives, and do not be harsh with them."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>This verse is four words in Greek — and one of them is a command not to be bitter or harsh. The word means to embitter, to exasperate. Sit with this: in what specific ways have you been harsh, cold, dismissive, or cutting toward your wife?</div>
+      <div class="day-prayer"><span>Pray</span>Father, name for me every harsh word and cold silence. I repent of each one.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 13</span>
+      <span class="day-ref">1 John 4:18–19</span>
+      <span class="day-focus">Love Casts Out Fear</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"There is no fear in love, but perfect love casts out fear... We love because he first loved us."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>Your wife should not be afraid of you. If she walks on eggshells, goes silent, or shrinks — that is the wound of your dictatorship made visible. Love and fear cannot coexist. Which does your wife experience in your presence?</div>
+      <div class="day-prayer"><span>Pray</span>Lord, has my wife been afraid of me? Show me. I do not want to be a man who creates fear. Cast out every root of that in me.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 14</span>
+      <span class="day-ref">Romans 12:10</span>
+      <span class="day-focus">Outdo One Another</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Love one another with brotherly affection. Outdo one another in showing honor."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>The competitive instinct God wired in you was meant for this: a race to honor your wife. Are you competing to be served or competing to serve? End this week by asking your wife one question: "How can I honor you better?"</div>
+      <div class="day-prayer"><span>Pray</span>God, redirect my competitiveness toward honoring my wife. Let me outdo her in love — not in pride.</div>
+    </div>
+  </div>
+</div>
+
+<!-- WEEK 3 -->
+<div class="week-section" id="week-3">
+  <div class="week-header">
+    <div class="week-number">Week Three</div>
+    <div class="week-theme">Dying to Self Daily</div>
+    <div class="week-desc">Transformation is not an event — it is a daily death. This week is about the hard, unglamorous discipline of putting the flesh to death in real marriage moments.</div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 15</span>
+      <span class="day-ref">Galatians 2:20</span>
+      <span class="day-focus">Not I, But Christ</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"I have been crucified with Christ. It is no longer I who live, but Christ who lives in me."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>The dictator in your marriage is the "I" that has not yet been crucified. Every controlling impulse, every demand, every cold silence is the old self refusing the cross. What specific part of "you" needs to die in your marriage today?</div>
+      <div class="day-prayer"><span>Pray</span>Christ, crucify the dictator in me. I do not want to lead from my flesh anymore. Live through me toward my wife today.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 16</span>
+      <span class="day-ref">Luke 9:23</span>
+      <span class="day-focus">Daily Cross</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"If anyone would come after me, let him deny himself and take up his cross daily and follow me."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>The word is daily. There is no permanent victory over the flesh — there is only today's death. What does taking up the cross look like in a Tuesday morning disagreement with your wife? In a Friday night power struggle?</div>
+      <div class="day-prayer"><span>Pray</span>Jesus, today I pick up the cross again. Show me where I will need to die today before I even get there.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 17</span>
+      <span class="day-ref">James 4:6–7</span>
+      <span class="day-focus">God Opposes the Proud</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"God opposes the proud but gives grace to the humble. Submit yourselves therefore to God. Resist the devil and he will flee from you."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>This is sobering: God is actively opposing you when you lead in pride. He is not neutral. The transformation you want in your marriage begins with radical submission to God — not better leadership strategies.</div>
+      <div class="day-prayer"><span>Pray</span>God, I do not want You against me. I humble myself before You now. I submit. Resist the enemy who has fed my pride for so long.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 18</span>
+      <span class="day-ref">Proverbs 15:1</span>
+      <span class="day-focus">The Tongue in Marriage</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"A soft answer turns away wrath, but a harsh word stirs up anger."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>Much of your dictatorship lives in your tone and words. A sharp answer, a dismissive tone, a loud silence — these are weapons. Think back: what is the tone your wife most often experiences from you? What tone do you want her to experience?</div>
+      <div class="day-prayer"><span>Pray</span>Lord, set a guard over my mouth. Let my wife hear something different from me today.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 19</span>
+      <span class="day-ref">Ephesians 4:31–32</span>
+      <span class="day-focus">Put It Off / Put It On</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Let all bitterness and wrath and anger and clamor and slander be put away from you... Be kind to one another, tenderhearted, forgiving one another, as God in Christ forgave you."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>Paul gives two movements: put off, put on. Write down what you need to put off in your marriage. Then write what you need to put on. Post it somewhere you will see it every morning.</div>
+      <div class="day-prayer"><span>Pray</span>Father, I put off [name them specifically]. I put on kindness, tenderness, and forgiveness toward my wife. I cannot do this without You.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 20</span>
+      <span class="day-ref">Matthew 5:23–24</span>
+      <span class="day-focus">Go First</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"If you are offering your gift at the altar and there remember that your brother has something against you, leave your gift there... first go and be reconciled."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>God interrupts worship for reconciliation. If your wife has something against you — and after years of dictatorship, she likely does — God says: go first. Don't wait for her to come to you. That is still the dictator talking.</div>
+      <div class="day-prayer"><span>Pray</span>God, who do I need to go to first? Give me the humility to go to my wife before I come back to this altar.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 21</span>
+      <span class="day-ref">Micah 6:8</span>
+      <span class="day-focus">What God Requires</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"He has told you, O man, what is good; and what does the Lord require of you but to do justice, and to love kindness, and to walk humbly with your God?"</div>
+      <div class="day-meditation"><strong>Meditate On</strong>Three things. Not spiritual success. Not leadership excellence. Justice — have you been just toward your wife? Kindness — not occasionally, but as a way of life? Humility with God — daily, not just in crisis? Score yourself honestly against all three.</div>
+      <div class="day-prayer"><span>Pray</span>Lord, this is all You require. And I have failed at all three. Start building these in me from the ground up.</div>
+    </div>
+  </div>
+</div>
+
+<!-- WEEK 4 -->
+<div class="week-section" id="week-4">
+  <div class="week-header">
+    <div class="week-number">Week Four</div>
+    <div class="week-theme">Walking in the New Man</div>
+    <div class="week-desc">Brokenness is not the destination — Christ-likeness is. This week is about the new identity you walk in as a redeemed husband and steward of God's glory.</div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 22</span>
+      <span class="day-ref">Ephesians 5:28–29</span>
+      <span class="day-focus">She Is Your Own Body</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Husbands should love their wives as their own bodies. He who loves his wife loves himself. For no one ever hated his own flesh, but nourishes and cherishes it."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>Two words: nourish and cherish. To nourish is to build up. To cherish is to hold warmly. Ask yourself: is my wife being built up by my presence? Does she feel warmly held by me? If not — what is one specific thing you will change?</div>
+      <div class="day-prayer"><span>Pray</span>Father, let my wife be better — stronger, more secure, more joyful — because she is married to me. Make me a man who nourishes.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 23</span>
+      <span class="day-ref">Proverbs 31:28–29</span>
+      <span class="day-focus">Praise Her Publicly</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Her husband praises her: 'Many women have done excellently, but you surpass them all.'"</div>
+      <div class="day-meditation"><strong>Meditate On</strong>When did you last sincerely praise your wife — to her face, to your children, to others? A dictator diminishes. A servant-leader magnifies. Today, tell your wife three specific things you genuinely admire about her. Speak them out loud.</div>
+      <div class="day-prayer"><span>Pray</span>Lord, loosen my tongue for praise of my wife. Let me be the loudest voice calling out her worth.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 24</span>
+      <span class="day-ref">Joshua 24:15</span>
+      <span class="day-focus">Lead by Going First</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"As for me and my house, we will serve the Lord."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>Joshua did not say "my house will serve." He said me and my house — he went first. Spiritual leadership is not demanding that your family follow God. It is being so visibly surrendered to God that they are drawn to follow. What does your wife see you surrendering to?</div>
+      <div class="day-prayer"><span>Pray</span>God, make my surrender visible. Let my wife see a man who follows You — not a man who demands she follow him.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 25</span>
+      <span class="day-ref">Song of Solomon 2:3–4</span>
+      <span class="day-focus">Delight in Her</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"His banner over me was love."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>The Song of Solomon is in your Bible because God designed marriage to include deep delight. A dictator uses his wife. A husband delights in his wife. When did you last pursue your wife with pure delight — not for what she does but for who she is? Do that today.</div>
+      <div class="day-prayer"><span>Pray</span>Lord, restore my delight in my wife. Let her feel pursued and cherished, not managed and endured.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 26</span>
+      <span class="day-ref">Romans 15:1–3</span>
+      <span class="day-focus">Bear Her Weaknesses</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"We who are strong have an obligation to bear with the failings of the weak, and not to please ourselves. Let each of us please his neighbor for his good, to build him up. For Christ did not please himself."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>Strength in marriage is not authority over weakness — it is the patient bearing of weakness. Where have you been impatient, dismissive, or contemptuous of your wife's struggles? That is strength misused. Bear with her as Christ bore with you.</div>
+      <div class="day-prayer"><span>Pray</span>Christ, You bore my every failure with patience. Give me that same patience toward my wife's.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 27</span>
+      <span class="day-ref">Ephesians 4:15</span>
+      <span class="day-focus">Truth in Love</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Rather, speaking the truth in love, we are to grow up in every way into him who is the head, into Christ."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>A dictator speaks truth without love (it becomes a weapon) or withholds truth for peace (it becomes cowardice). The spiritual leader holds both — truth that serves her growth, delivered in love that protects her dignity. Are you doing this?</div>
+      <div class="day-prayer"><span>Pray</span>Father, teach me to speak truth that builds my wife up, never truth wielded to win arguments or prove points.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 28</span>
+      <span class="day-ref">Hebrews 13:4 + Ecclesiastes 9:9</span>
+      <span class="day-focus">Honor the Gift</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Let marriage be held in honor among all." / "Enjoy life with the wife whom you love, all the days of your vain life... for this is your portion in life."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>God calls your wife your portion — your assigned treasure. You do not deserve her. She is given. Dictators take gifts for granted. Stewards hold them with awe. Do you still hold your wife with awe? What has familiarity killed in your heart toward her?</div>
+      <div class="day-prayer"><span>Pray</span>Lord, restore the wonder. Let me see my wife as the gift she is — today and every day.</div>
+    </div>
+  </div>
+</div>
+
+<!-- DAYS 29-30 -->
+<div class="week-section" id="week-5">
+  <div class="week-header">
+    <div class="week-number">The Final Days</div>
+    <div class="week-theme">Seal It and Continue</div>
+    <div class="week-desc">These last two days are not an ending. They are a commissioning. The 30 days mean nothing if they don't become a new way of life.</div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 29</span>
+      <span class="day-ref">Lamentations 3:22–23</span>
+      <span class="day-focus">New Every Morning</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"The steadfast love of the Lord never ceases; his mercies never come to an end; they are new every morning; great is your faithfulness."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>You will fail again. There will be days when the dictator rises. The mercy of God does not run out on day 30. Every morning is a new beginning — for you and for your marriage. This is not permission to sin. It is fuel to keep fighting.</div>
+      <div class="day-prayer"><span>Pray</span>Lord, thank You that Your mercies outlast my failures. I receive new mercy today. I will need it again tomorrow.</div>
+    </div>
+  </div>
+
+  <div class="day-card" onclick="toggleDay(this)">
+    <div class="day-header">
+      <span class="day-num">Day 30</span>
+      <span class="day-ref">Revelation 5:12 + Revelation 4:11</span>
+      <span class="day-focus">Give It Back</span>
+    </div>
+    <div class="day-body">
+      <div class="day-verse">"Worthy is the Lamb who was slain, to receive power and wealth and wisdom and might and honor and glory and blessing." / "Worthy are you, our Lord and God, to receive glory and honor and power."</div>
+      <div class="day-meditation"><strong>Meditate On</strong>This is where it ends — and where it begins again. You started this journey because you were stealing God's glory in your marriage. End by giving glory back to where it belongs. You are not the head of your home. Christ is. You are a steward. Lay it down at His feet.</div>
+      <div class="day-prayer"><span>Pray</span>Lord, I give You back the glory I have stolen. My marriage is Yours. My wife is entrusted to me by You. I will lead only as a man under Your Lordship. Worthy is the Lamb — not me. Amen.</div>
+    </div>
+  </div>
+
+  <div class="ornament">✦ ✦ ✦</div>
+
+  <div style="text-align:center; padding: 20px; border: 1px solid rgba(201,168,76,0.2); background: rgba(201,168,76,0.03);">
+    <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">CONTINUE THE JOURNEY</div>
+    <p style="font-size:15px; color:var(--light-smoke); font-style:italic; line-height:1.8;">Start again on Day 1. The second time through, you will find different things. Real transformation takes years, not 30 days. Stay broken. Stay soft. Stay under Christ.</p>
+  </div>
+</div>
+
+<footer>
+  "For from him and through him and to him are all things. To him be glory forever." — Romans 11:36
+</footer>
+
+<script>
+  function showWeek(n) {
+    document.querySelectorAll('.week-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('week-' + n).classList.add('active');
+    document.querySelectorAll('.week-btn')[n-1].classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggleDay(card) {
+    const wasOpen = card.classList.contains('open');
+    document.querySelectorAll('.day-card.open').forEach(c => c.classList.remove('open'));
+    if (!wasOpen) card.classList.add('open');
+  }
+</script>
+</body>
+</html>
